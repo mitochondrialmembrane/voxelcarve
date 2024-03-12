@@ -150,7 +150,7 @@ def plane_sweep(
                     colors = get_cam_colors(cams_in_dir, voxel_loc)
 
                     if colors:
-                        if consist(colors):
+                        if consist(np.array(colors)):
                             # adds first color to array
                             grid_colors[index[0], index[1], index[2], dir_index] = colors[0]
                             voxels_covered[j][k] = True
@@ -206,17 +206,17 @@ def get_cam_colors(cams: list, voxel_loc: np.array) -> list:
   return colors
 
 # determines if the given colors are similar enough to be consistent
-def consist(colors: list) -> bool:
+def consist(colors: np.array) -> bool:
   """ Determines if the given colors are similar enough to be consistent
 
     Args:
-      list[np.array[float]] (colors): colors to be compared
+      np.array[np.array[float]] (colors): colors to be compared
     
     Returns:
       bool: if the colors are consistent
 
   """
-  if not colors:
+  if len(colors) == 0:
     return False
   stdreds = np.std(colors[:,0])
   stdgreens = np.std(colors[:,1])
@@ -270,7 +270,7 @@ def main():
       # carves a voxel if colors from plane sweeps are inconsistent
       if len(voxel_colors) > 0:
         volume.remove_voxel(index)
-        if consist(voxel_colors):
+        if consist(np.array(voxel_colors)):
           volume.add_voxel(o3d.cpu.pybind.geometry.Voxel(index, voxel_colors[0]))
     
     # stops if no voxels were removed
