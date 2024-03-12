@@ -218,27 +218,25 @@ def consist(colors: list) -> bool:
   """
   if not colors:
     return False
-  color_transpose = np.transpose(colors)
-  stdreds = np.std(color_transpose[0])
-  stdgreens = np.std(color_transpose[1])
-  stdblues = np.std(color_transpose[2])
+  stdreds = np.std(colors[:,0])
+  stdgreens = np.std(colors[:,1])
+  stdblues = np.std(colors[:,2])
   return stdreds + stdgreens + stdblues <= SIMILARITY_THRESHOLD
 
 def main():
   # processes cam info in cam_info.txt to create cameras
   cams = []
-  f = open(FOLDER_PATH + "cam_info.txt", "r")
-  for line in f:
-    info = line.split()
-    loc = info[0].split(",")
-    rot = info[1].split(",")
-    img = plt.imread(FOLDER_PATH + info[2])
-    cams.append(Camera(np.array([float(loc[0]), float(loc[1]), float(loc[2])]),
-                np.array([np.radians(float(rot[0])),
-                          np.radians(float(rot[1])),
-                          np.radians(float(rot[2]))]),
-                img))
-  f.close
+  with open(FOLDER_PATH + "cam_info.txt", "r") as f:
+    for line in f:
+      info = line.split()
+      loc = info[0].split(",")
+      rot = info[1].split(",")
+      img = plt.imread(FOLDER_PATH + info[2])
+      cams.append(Camera(np.array([float(loc[0]), float(loc[1]), float(loc[2])]),
+                  np.array([np.radians(float(rot[0])),
+                            np.radians(float(rot[1])),
+                            np.radians(float(rot[2]))]),
+                  img))
 
   # initializes voxel grid
   volume = o3d.geometry.VoxelGrid.create_dense(
@@ -246,6 +244,8 @@ def main():
       GRID_SIZE[0]*VOXEL_SIZE, GRID_SIZE[1]*VOXEL_SIZE, GRID_SIZE[2]*VOXEL_SIZE)
   carved_voxels = np.full((GRID_SIZE[0], GRID_SIZE[1], GRID_SIZE[2]), False)
 
+  # iterates while len(voxels_to_remove) > 0
+  # voxels_to_remove is reset for each iteration, so it's not being instantiate outside the loop
   while True:
     # stores consistent colors from each plane sweep
     grid_colors = np.full((GRID_SIZE[0], GRID_SIZE[1], GRID_SIZE[2], 6), None)
