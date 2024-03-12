@@ -116,7 +116,7 @@ def plane_sweep(
     dir_vec = np.array([0, 0, 0, 1])
     # direction is determined by axis and is_negative
     dir_vec[axis] = (-1) ** int(is_negative)
-    sweep_index = 3 * int(is_negative) + axis
+    dir_index = 3 * int(is_negative) + axis
 
     cams_in_dir = get_cams_in_dir(cams, dir_vec)
 
@@ -152,7 +152,7 @@ def plane_sweep(
                     if colors:
                         if consist(colors):
                             # adds first color to array
-                            grid_colors[index[0], index[1], index[2]].append(colors[0])
+                            grid_colors[index[0], index[1], index[2], dir_index] = colors[0]
                             voxels_covered[j][k] = True
                         else:
                             voxels_to_remove.append(index)
@@ -172,9 +172,9 @@ def get_cams_in_dir(cams: list, dir_vec: np.array, dir_threshhold=0.1) -> list:
 
     """
     cams_in_dir = []
-    for i in range(len(cams)):
-        if (np.dot(cams[i].w.transpose(), dir_vec) - 1) < dir_threshhold:
-            cams_in_dir.append(cams[i])
+    for cam in cams:
+        if (np.dot(cam.w.transpose(), dir_vec) - 1) < dir_threshhold:
+            cams_in_dir.append(cam)
     return cams_in_dir
 
 
@@ -248,7 +248,7 @@ def main():
 
   while True:
     # stores consistent colors from each plane sweep
-    grid_colors = np.full((GRID_SIZE[0], GRID_SIZE[1], GRID_SIZE[2]), [])
+    grid_colors = np.full((GRID_SIZE[0], GRID_SIZE[1], GRID_SIZE[2], 6), None)
     # stores voxels to be carved
     voxels_to_remove = []
 
@@ -264,7 +264,8 @@ def main():
       index = voxel.grid_index
       voxel_colors = []
       for color in grid_colors[index[0], index[1], index[2]]:
-        voxel_colors.append(color)
+        if hasattr(color, '__len__'):
+          voxel_colors.append(color)
 
       # carves a voxel if colors from plane sweeps are inconsistent
       if len(voxel_colors) > 0:
