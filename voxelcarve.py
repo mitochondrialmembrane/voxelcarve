@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 
 CAM_ANGLE_V = np.radians(27.0)
 CAM_ANGLE_H = np.radians(39.6)
-GRID_START_LOC = np.array([-1.5,-1,-2])
-GRID_SIZE = np.array([60,40,80]) # num voxels in grid
+GRID_START_LOC = np.array([-1.5,-1.1,-2])
+GRID_SIZE = np.array([60,44,80]) # num voxels in grid
 VOXEL_SIZE = 0.05 # size of voxel
-SIMILARITY_THRESHOLD = 0.23
+SIMILARITY_THRESHOLD = 0.23 # threshold needed for colors to be considered consistent
 FOLDER_PATH = "figure/"
 
 # stores the info of a camera, as well as its associated photo
@@ -45,7 +45,8 @@ def eulerXYZ(vec, rot):
   return z_rotated
 
 # sweeps through the volume in a given direction, carving plane by plane
-def plane_sweep(cams, axis, is_negative, volume, grid_colors, voxels_to_remove, carved_voxels):
+def plane_sweep(cams: list, axis: int, is_negative: bool, volume: o3d.geometry.VoxelGrid, 
+                grid_colors: np.array, voxels_to_remove: list, carved_voxels: np.array):
   dir_vec = np.array([0, 0, 0, 1])
   # direction is determined by axis and is_negative
   dir_vec[axis] = (-1) ** int(is_negative)
@@ -85,7 +86,7 @@ def plane_sweep(cams, axis, is_negative, volume, grid_colors, voxels_to_remove, 
               carved_voxels[index[0],index[1],index[2]] = True
 
 # returns the cameras facing in the same direction as dir_vec
-def get_cams_in_dir(cams, dir_vec, dir_threshhold = 0.1):
+def get_cams_in_dir(cams: list, dir_vec: np.array, dir_threshhold = 0.1):
   cams_in_dir = []
   for i in range(len(cams)):
     if (np.dot(cams[i].w.transpose(), dir_vec) - 1) < dir_threshhold:
@@ -93,7 +94,7 @@ def get_cams_in_dir(cams, dir_vec, dir_threshhold = 0.1):
   return cams_in_dir
 
 # gets the pixel color that a voxel projects to for each camera
-def get_cam_colors(cams, voxel_loc):
+def get_cam_colors(cams: list, voxel_loc: np.array):
   colors = []
   for i in range(len(cams)):
     voxel_cam_loc = np.matmul(cams[i].mat, voxel_loc)
@@ -110,7 +111,7 @@ def get_cam_colors(cams, voxel_loc):
   return colors
 
 # determines if the given colors are similar enough to be consistent
-def consist(colors):
+def consist(colors: list):
   if np.std(np.transpose(colors)[0]) + np.std(np.transpose(colors)[1]) + np.std(np.transpose(colors)[2]) > SIMILARITY_THRESHOLD or not colors:
     return False
   return True
